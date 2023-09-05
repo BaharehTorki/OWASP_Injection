@@ -6,11 +6,11 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InsecureRepo {
+public class SecureRepo {
 
     public List<User> retrieveAllByName(String name) {
 
-        String baseQuery = "select * from insecure_user where name=";
+        String baseQuery = "select * from user where name = ?";
         // Database connection details
         String jdbcUrl = "jdbc:mysql://localhost:3306/owaspdb";
         String username = "root";
@@ -26,13 +26,14 @@ public class InsecureRepo {
 
         try (Connection connection = DriverManager.getConnection(jdbcUrl, username, password)) {
             if (connection != null) {
-                System.out.println("----------------- Connection established -----------------");
-                System.out.println("\t\t\tRunning a query with INSECURE INJECTION.");
-                System.out.println("\t\t\t"+ baseQuery+name);
+                System.out.println("-----------------Connection established-----------------");
+                System.out.println("\t\t\tRunning a query that make SECURE INJECTION.");
+                System.out.println("\t\t\t" + baseQuery + ", ? is prepared with "+ name);
 
-                Statement statement = connection.createStatement();
-                System.out.println(" ");
-                ResultSet resultSet = statement.executeQuery(baseQuery + name);
+                PreparedStatement preparedStatement = connection.prepareStatement(baseQuery);
+                preparedStatement.setString(1, name);
+                ResultSet resultSet = preparedStatement.executeQuery();
+
                 while (resultSet.next()) {
                     result.add(User.builder()
                             .age(resultSet.getInt("age"))
@@ -41,7 +42,7 @@ public class InsecureRepo {
                             .build());
                 }
                 resultSet.close();
-                statement.close();
+                preparedStatement.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
